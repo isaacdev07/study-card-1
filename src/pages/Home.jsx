@@ -19,11 +19,11 @@ function Home() {
     const dadosSalvos = localStorage.getItem("cards");
     return dadosSalvos ? JSON.parse(dadosSalvos) : [];
   });
-      const [editandoIndex, setEditandoIndex] = useState(null);
-      const [toast, setToast] = useState("");
-      const [mostrarLogoutModal, setMostrarLogoutModal] = useState(false);
-      const [acaoModal, setAcaoModal] = useState(null);
-// { tipo: "excluir" | "concluir" | "cancelar" | "reativar", index: number }
+  const [editandoIndex, setEditandoIndex] = useState(null);
+  const [toast, setToast] = useState("");
+  const [mostrarLogoutModal, setMostrarLogoutModal] = useState(false);
+  const [acaoModal, setAcaoModal] = useState(null);
+  // { tipo: "excluir" | "concluir" | "cancelar" | "reativar", index: number }
   const [mostrarModal, setMostrarModal] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -39,38 +39,38 @@ function Home() {
     localStorage.setItem("cards", JSON.stringify(cards));
   }, [cards]);
   useEffect(() => {
-  if (toast) {
-    const timer = setTimeout(() => setToast(""), 3000);
-    return () => clearTimeout(timer);
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+  function confirmarAcao() {
+    const { tipo, index } = acaoModal;
+
+    const novos = [...cards];
+
+    if (tipo === "concluir") {
+      novos[index].status = "concluido";
+      setCards(novos);
+    }
+
+    if (tipo === "cancelar") {
+      novos[index].status = "cancelado";
+      setCards(novos);
+    }
+
+    if (tipo === "reativar") {
+      novos[index].status = "pendente";
+      setCards(novos);
+    }
+
+    if (tipo === "excluir") {
+      const filtrados = cards.filter((_, i) => i !== index);
+      setCards(filtrados);
+    }
+
+    setAcaoModal(null);
   }
-}, [toast]);
-function confirmarAcao() {
-  const { tipo, index } = acaoModal;
-
-  const novos = [...cards];
-
-  if (tipo === "concluir") {
-    novos[index].status = "concluido";
-    setCards(novos);
-  }
-
-  if (tipo === "cancelar") {
-    novos[index].status = "cancelado";
-    setCards(novos);
-  }
-
-  if (tipo === "reativar") {
-    novos[index].status = "pendente";
-    setCards(novos);
-  }
-
-  if (tipo === "excluir") {
-    const filtrados = cards.filter((_, i) => i !== index);
-    setCards(filtrados);
-  }
-
-  setAcaoModal(null);
-}
   // ✅ CONCLUIR
   function concluirCard(index) {
     const novos = [...cards];
@@ -117,32 +117,29 @@ function confirmarAcao() {
       return;
     }
 
-     setErro("");
+    setErro("");
 
-  // 🔥 SE ESTIVER EDITANDO
-  if (editandoIndex !== null) {
-  const novos = [...cards];
-  novos[editandoIndex] = { ...novoCard };
-  setCards(novos);
-  setEditandoIndex(null);
-  setToast("Card atualizado com sucesso ✅");
-} else {
-  setCards([
-    ...cards,
-    { ...novoCard, status: "pendente" }
-  ]);
-  setToast("Card criado com sucesso 🚀");
-}
+    // 🔥 SE ESTIVER EDITANDO
+    if (editandoIndex !== null) {
+      const novos = [...cards];
+      novos[editandoIndex] = { ...novoCard };
+      setCards(novos);
+      setEditandoIndex(null);
+      setToast("Card atualizado com sucesso ✅");
+    } else {
+      setCards([...cards, { ...novoCard, status: "pendente" }]);
+      setToast("Card criado com sucesso 🚀");
+    }
 
-  setNovoCard({
-    nome: "",
-    tema: "",
-    texto: "",
-    data: ""
-  });
+    setNovoCard({
+      nome: "",
+      tema: "",
+      texto: "",
+      data: "",
+    });
 
-  setMostrarModal(false);
-}
+    setMostrarModal(false);
+  }
   return (
     <div className="container">
       {toast && <div className="toast">{toast}</div>}
@@ -150,30 +147,16 @@ function confirmarAcao() {
       <header className="header">
         <div className="header-content">
           <h2>Study card</h2>
-
-        <button
-  className="logout"
-  onClick={() => setMostrarLogoutModal(true)}
->
-  <FiLogOut size={24} />
-</button>
-        </div>
-      </header>
-      {acaoModal && (
+          {mostrarLogoutModal && (
   <div className="modal-overlay">
     <div className="modal logout-modal">
 
-      <h2>
-        {acaoModal.tipo === "excluir" && "Deseja excluir o card?"}
-        {acaoModal.tipo === "concluir" && "Marcar como concluído?"}
-        {acaoModal.tipo === "cancelar" && "Deseja cancelar o card?"}
-        {acaoModal.tipo === "reativar" && "Deseja reativar o card?"}
-      </h2>
+      <h2>Deseja sair?</h2>
 
       <div className="logout-buttons">
         <button
           className="cancelar"
-          onClick={() => setAcaoModal(null)}
+          onClick={() => setMostrarLogoutModal(false)}
         >
           Cancelar
         </button>
@@ -181,31 +164,66 @@ function confirmarAcao() {
         <button
           className="sair"
           onClick={() => {
-            confirmarAcao();
-
-            // 🔥 TOASTS
-            if (acaoModal.tipo === "excluir") {
-              setToast("Card excluído 🗑️");
-            }
-            if (acaoModal.tipo === "concluir") {
-              setToast("Card concluído ✅");
-            }
-            if (acaoModal.tipo === "cancelar") {
-              setToast("Card cancelado ❌");
-            }
-            if (acaoModal.tipo === "reativar") {
-              setToast("Card reativado 🔄");
-            }
+            setMostrarLogoutModal(false);
+            setToast("Você saiu 👋");
           }}
         >
-          Confirmar
+          Sair
         </button>
       </div>
 
     </div>
   </div>
-
 )}
+
+          <button
+            className="logout"
+            onClick={() => setMostrarLogoutModal(true)}
+          >
+            <FiLogOut size={24} />
+          </button>
+        </div>
+      </header>
+      {acaoModal && (
+        <div className="modal-overlay">
+          <div className="modal logout-modal">
+            <h2>
+              {acaoModal.tipo === "excluir" && "Deseja excluir o card?"}
+              {acaoModal.tipo === "concluir" && "Marcar como concluído?"}
+              {acaoModal.tipo === "cancelar" && "Deseja cancelar o card?"}
+              {acaoModal.tipo === "reativar" && "Deseja reativar o card?"}
+            </h2>
+
+            <div className="logout-buttons">
+              <button className="cancelar" onClick={() => setAcaoModal(null)}>
+              voltar
+              </button>
+
+             <button
+  className="sair"
+  onClick={() => {
+    confirmarAcao();
+
+    if (acaoModal.tipo === "excluir") {
+      setToast("Card excluído 🗑️");
+    }
+    if (acaoModal.tipo === "concluir") {
+      setToast("Card concluído ✅");
+    }
+    if (acaoModal.tipo === "cancelar") {
+      setToast("Card cancelado ❌");
+    }
+    if (acaoModal.tipo === "reativar") {
+      setToast("Card reativado 🔄");
+    }
+  }}
+>
+  Confirmar
+</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL */}
       {mostrarModal && (
@@ -262,9 +280,9 @@ function confirmarAcao() {
 
             {erro && <p className="erro">{erro}</p>}
 
-           <button className="btn-criar" onClick={adicionarCard}>
-  {editandoIndex !== null ? "Salvar" : "Criar"}
-</button>
+            <button className="btn-criar" onClick={adicionarCard}>
+              {editandoIndex !== null ? "Salvar" : "Criar"}
+            </button>
           </div>
         </div>
       )}
@@ -279,20 +297,20 @@ function confirmarAcao() {
           <h2>{nome}</h2>
         </div>
 
-       <button
-  className="btn-novo"
-  onClick={() => {
-    setMostrarModal(true);
-    setErro("");
-    setEditandoIndex(null); // 🔥 limpa edição
-    setNovoCard({
-      nome: "",
-      tema: "",
-      texto: "",
-      data: ""
-    });
-  }}
->
+        <button
+          className="btn-novo"
+          onClick={() => {
+            setMostrarModal(true);
+            setErro("");
+            setEditandoIndex(null); // 🔥 limpa edição
+            setNovoCard({
+              nome: "",
+              tema: "",
+              texto: "",
+              data: "",
+            });
+          }}
+        >
           novo <FiPlus size={44} />
         </button>
       </div>
@@ -330,7 +348,6 @@ function confirmarAcao() {
                       <FiCheckCircle size={16} /> Concluído
                     </>
                   )}
-                  
 
                   {card.status === "cancelado" && (
                     <>
@@ -358,41 +375,43 @@ function confirmarAcao() {
                 <>
                   <button
                     className="concluir"
-onClick={() => setAcaoModal({ tipo: "concluir", index })}                  >
+                    onClick={() => setAcaoModal({ tipo: "concluir", index })}
+                  >
                     Concluir
                   </button>
 
                   <button
                     className="cancelar"
-onClick={() => setAcaoModal({ tipo: "cancelar", index })}                  >
+                    onClick={() => setAcaoModal({ tipo: "cancelar", index })}
+                  >
                     Cancelar
                   </button>
                 </>
               )}
 
-          {card.status === "concluido" && (
-  <button
-    className="excluir"
-    onClick={() => setAcaoModal({ tipo: "excluir", index })}
-  >
-    Excluir
-  </button>
-)}
+              {card.status === "concluido" && (
+                <button
+                  className="excluir"
+                  onClick={() => setAcaoModal({ tipo: "excluir", index })}
+                >
+                  Excluir
+                </button>
+              )}
               {card.status === "cancelado" && (
                 <>
                   <button
                     className="reativar"
-onClick={() => setAcaoModal({ tipo: "reativar", index })}
+                    onClick={() => setAcaoModal({ tipo: "reativar", index })}
                   >
                     Reativar
                   </button>
 
                   <button
                     className="excluir"
-onClick={() => setAcaoModal({ tipo: "excluir", index })}                  >
+                    onClick={() => setAcaoModal({ tipo: "excluir", index })}
+                  >
                     Excluir
                   </button>
-                  
                 </>
               )}
             </div>
