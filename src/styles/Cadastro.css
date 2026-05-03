@@ -21,12 +21,14 @@
   max-width: 450px; /* Isso impede que os campos fiquem esticados demais */
   text-align: center;
   padding: 20px;
+  
 }
 
 .card-cadastro h1 {
-  font-size: 5rem; 
+  font-size: 4rem; 
   color: white;
-  font-weight: 900;
+  font-family: 'Righteous', sans-serif;
+    font-weight: 400; /* regular */
   margin-bottom: 40px;
   letter-spacing: -3px;
 }
@@ -35,15 +37,19 @@
   text-align: left;
   margin-bottom: 15px;
   width: 100%;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
 }
+
 
 .campo-input label {
   color: white;
-  font-weight: 700;
   font-size: 1rem;
   margin-left: 15px;
   display: block;
   margin-bottom: 5px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
 }
 
 .campo-input input {
@@ -53,6 +59,8 @@
   border: none;
   outline: none;
   font-size: 1.1rem;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
 }
 
 .botao-cadastrar {
@@ -63,20 +71,27 @@
   border: 1.5px solid white;
   border-radius: 50px;
   font-size: 1.8rem;
-  font-weight: 800;
-  margin-top: 30px;
+  font-family: "Righteous", sans-serif;
+  font-weight: 400;  margin-top: 30px;
   cursor: pointer;
+}
+.botao-cadastrar:hover {
+  background-color: white;
+  color: #002080;
 }
 .link-login {
   margin-top: 15px;
   text-align: center;
   font-size: 14px;
+  font-family: "Righteous", sans-serif;
+  font-weight: 400;
 }
 
 .link-login a {
   color: #0095ff;
-  font-weight: bold;
   text-decoration: none;
+  font-family: "Righteous", sans-serif;
+  font-weight: 400;
 }
 
 .link-login a:hover {
