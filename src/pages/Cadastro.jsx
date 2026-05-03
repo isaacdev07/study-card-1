@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import '../styles/Cadastro.css';
 import { Link } from 'react-router-dom';
 
-// ... dentro do return do Cadastro ...
-<Link to="/login" style={{ color: 'white', marginTop: '15px', display: 'block' }}>
-  Já tenho uma conta? Entrar
-</Link>
+
 
 function Cadastro() {
   // Criando o "estado" para cada campo do formulário
@@ -60,9 +57,14 @@ function Cadastro() {
         </div>
 
         <button type="submit" className="botao-cadastrar">
-          Cadastrar
-        </button>
+  Cadastrar
+</button>
+
+<p className="link-login">
+  Já tem uma conta? <Link to="/login">Login</Link>
+</p>
       </form>
+      
     </div>
   );
 }

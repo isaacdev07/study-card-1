@@ -38,13 +38,12 @@ function Login() {
         </div>
 
         <button type="submit" className="botao-entrar">
-          Entrar
-        </button>
+  Entrar
+</button>
 
-        {/* O Link tem que ficar dentro do form ou do container, depois do botão */}
-        <Link to="/cadastro" style={{ color: 'white', marginTop: '15px', display: 'block', textDecoration: 'none' }}>
-          Não tem conta? Cadastre-se
-        </Link>
+<p className="link-login">
+  Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+</p>
       </form>
     </div>
   );

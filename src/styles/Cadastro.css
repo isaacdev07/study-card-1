@@ -67,3 +67,18 @@
   margin-top: 30px;
   cursor: pointer;
 }
+.link-login {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.link-login a {
+  color: #0095ff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.link-login a:hover {
+  text-decoration: underline;
+}
