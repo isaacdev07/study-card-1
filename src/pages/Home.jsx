@@ -12,8 +12,23 @@ import "../styles/home.css";
 import { useState, useEffect } from "react";
 
 function Home() {
-  const nome = "Leycon";
 
+// Nome do usuário logado
+const usuarioLogado =
+  JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+  // Exibe mensagem vinda do Login/Cadastro
+useEffect(() => {
+  const mensagem = localStorage.getItem("mensagem");
+
+  if (mensagem) {
+    setToast(mensagem);
+    localStorage.removeItem("mensagem");
+  }
+}, []);
+
+// Se existir nome, exibe o nome cadastrado.
+// Caso contrário, mostra "Usuário".
+const nome = usuarioLogado.nome || "Usuário";
   // 🔥 CARREGAR LOCALSTORAGE
   const [cards, setCards] = useState(() => {
     const dadosSalvos = localStorage.getItem("cards");
@@ -99,47 +114,115 @@ function Home() {
   }
 
   // ➕ ADICIONAR CARD
-  function adicionarCard() {
-    if (
-      !novoCard.nome.trim() ||
-      !novoCard.tema.trim() ||
-      !novoCard.texto.trim() ||
-      !novoCard.data.trim()
-    ) {
-      setErro("Preencha todos os campos!");
-      return;
-    }
-
-    const regex = /^\d{2}\/\d{2}\s-\s\d{2}\/\d{2}$/;
-
-    if (!regex.test(novoCard.data)) {
-      setErro("Formato de data inválido! Use: 10/03 - 15/03");
-      return;
-    }
-
-    setErro("");
-
-    // 🔥 SE ESTIVER EDITANDO
-    if (editandoIndex !== null) {
-      const novos = [...cards];
-      novos[editandoIndex] = { ...novoCard };
-      setCards(novos);
-      setEditandoIndex(null);
-      setToast("Card atualizado com sucesso ✅");
-    } else {
-      setCards([...cards, { ...novoCard, status: "pendente" }]);
-      setToast("Card criado com sucesso 🚀");
-    }
-
-    setNovoCard({
-      nome: "",
-      tema: "",
-      texto: "",
-      data: "",
-    });
-
-    setMostrarModal(false);
+  // ➕ ADICIONAR CARD
+function adicionarCard() {
+  if (
+    !novoCard.nome.trim() ||
+    !novoCard.tema.trim() ||
+    !novoCard.texto.trim() ||
+    !novoCard.data.trim()
+  ) {
+    setErro("Preencha todos os campos!");
+    return;
   }
+
+  // Valida formato: DD/MM - DD/MM
+  const regex = /^(\d{2})\/(\d{2})\s-\s(\d{2})\/(\d{2})$/;
+  const match = novoCard.data.match(regex);
+
+  if (!match) {
+    setErro("Formato de data inválido! Use: 10/03 - 15/03");
+    return;
+  }
+
+  // Captura as datas
+  const diaInicio = parseInt(match[1], 10);
+  const mesInicio = parseInt(match[2], 10);
+  const diaFim = parseInt(match[3], 10);
+  const mesFim = parseInt(match[4], 10);
+
+  // Função para validar se a data existe
+  function dataValida(dia, mes) {
+    if (mes < 1 || mes > 12) return false;
+
+    const diasPorMes = [
+      31, // Jan
+      28, // Fev
+      31, // Mar
+      30, // Abr
+      31, // Mai
+      30, // Jun
+      31, // Jul
+      31, // Ago
+      30, // Set
+      31, // Out
+      30, // Nov
+      31, // Dez
+    ];
+
+    return dia >= 1 && dia <= diasPorMes[mes - 1];
+  }
+
+  // Valida data inicial
+  if (!dataValida(diaInicio, mesInicio)) {
+    setErro("Data inicial inválida!");
+    return;
+  }
+
+  // Valida data final
+  if (!dataValida(diaFim, mesFim)) {
+    setErro("Data final inválida!");
+    return;
+  }
+
+  // Cria objetos Date para comparar
+  const anoAtual = new Date().getFullYear();
+
+  const dataInicio = new Date(anoAtual, mesInicio - 1, diaInicio);
+  const dataFim = new Date(anoAtual, mesFim - 1, diaFim);
+
+  // Verifica se a data final é menor que a inicial
+  if (dataFim < dataInicio) {
+    setErro("A data final não pode ser menor que a data inicial!");
+    return;
+  }
+
+  setErro("");
+
+  // 🔥 SE ESTIVER EDITANDO
+  if (editandoIndex !== null) {
+    const novos = [...cards];
+
+    // Mantém o status do card
+    novos[editandoIndex] = {
+      ...novoCard,
+      status: cards[editandoIndex].status,
+    };
+
+    setCards(novos);
+    setEditandoIndex(null);
+    setToast("Card atualizado com sucesso ✅");
+  } else {
+    setCards([
+      ...cards,
+      {
+        ...novoCard,
+        status: "pendente",
+      },
+    ]);
+    setToast("Card criado com sucesso 🚀");
+  }
+
+  // Limpa formulário
+  setNovoCard({
+    nome: "",
+    tema: "",
+    texto: "",
+    data: "",
+  });
+
+  setMostrarModal(false);
+}
   return (
     <div className="container">
       {toast && <div className="toast">{toast}</div>}
@@ -163,10 +246,20 @@ function Home() {
 
         <button
           className="sair"
-          onClick={() => {
-            setMostrarLogoutModal(false);
-            setToast("Você saiu 👋");
-          }}
+          // Substitua apenas o onClick do botão "Sair" por este código
+onClick={() => {
+  // Remove o usuário logado do localStorage
+  localStorage.removeItem("usuarioLogado");
+
+  // Fecha o modal
+  setMostrarLogoutModal(false);
+
+  // Salva mensagem para aparecer na tela de login
+  localStorage.setItem("mensagem", "Você saiu com sucesso 👋");
+
+  // Redireciona para o login
+  window.location.href = "/login";
+}}
         >
           Sair
         </button>
