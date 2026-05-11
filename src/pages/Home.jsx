@@ -11,34 +11,28 @@ import {
 import "../styles/home.css";
 import { useState, useEffect } from "react";
 
+import {
+  getCards,
+  createCard,
+  updateCard,
+  deleteCard,
+  concluirCard,
+  cancelarCard,
+  reativarCard,
+} from "../services/cardService";
+
 function Home() {
-
-// Nome do usuário logado
-const usuarioLogado =
+  
+ const usuarioLogado =
   JSON.parse(localStorage.getItem("usuarioLogado")) || {};
-  // Exibe mensagem vinda do Login/Cadastro
-useEffect(() => {
-  const mensagem = localStorage.getItem("mensagem");
 
-  if (mensagem) {
-    setToast(mensagem);
-    localStorage.removeItem("mensagem");
-  }
-}, []);
+const nome = usuarioLogado.name || "Usuário";
 
-// Se existir nome, exibe o nome cadastrado.
-// Caso contrário, mostra "Usuário".
-const nome = usuarioLogado.nome || "Usuário";
-  // 🔥 CARREGAR LOCALSTORAGE
-  const [cards, setCards] = useState(() => {
-    const dadosSalvos = localStorage.getItem("cards");
-    return dadosSalvos ? JSON.parse(dadosSalvos) : [];
-  });
+  const [cards, setCards] = useState([]);
   const [editandoIndex, setEditandoIndex] = useState(null);
   const [toast, setToast] = useState("");
   const [mostrarLogoutModal, setMostrarLogoutModal] = useState(false);
   const [acaoModal, setAcaoModal] = useState(null);
-  // { tipo: "excluir" | "concluir" | "cancelar" | "reativar", index: number }
   const [mostrarModal, setMostrarModal] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -49,225 +43,211 @@ const nome = usuarioLogado.nome || "Usuário";
     data: "",
   });
 
-  // 🔥 SALVAR AUTOMÁTICO
+  // mensagem login/cadastro
   useEffect(() => {
-    localStorage.setItem("cards", JSON.stringify(cards));
-  }, [cards]);
+    const mensagem = localStorage.getItem("mensagem");
+
+    if (mensagem) {
+      setToast(mensagem);
+      localStorage.removeItem("mensagem");
+    }
+  }, []);
+
+  // toast timer
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(""), 3000);
       return () => clearTimeout(timer);
     }
   }, [toast]);
-  function confirmarAcao() {
+
+  // carregar cards
+  useEffect(() => {
+    carregarCards();
+  }, []);
+
+  async function carregarCards() {
+    try {
+      const data = await getCards();
+      setCards(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function confirmarAcao() {
     const { tipo, index } = acaoModal;
 
-    const novos = [...cards];
+    const card = cards[index];
 
-    if (tipo === "concluir") {
-      novos[index].status = "concluido";
-      setCards(novos);
-    }
+    try {
+      if (tipo === "concluir") {
+        await concluirCard(card.id);
+        setToast("Card concluído ✅");
+      }
 
-    if (tipo === "cancelar") {
-      novos[index].status = "cancelado";
-      setCards(novos);
-    }
+      if (tipo === "cancelar") {
+        await cancelarCard(card.id);
+        setToast("Card cancelado ❌");
+      }
 
-    if (tipo === "reativar") {
-      novos[index].status = "pendente";
-      setCards(novos);
-    }
+      if (tipo === "reativar") {
+        await reativarCard(card.id);
+        setToast("Card reativado 🔄");
+      }
 
-    if (tipo === "excluir") {
-      const filtrados = cards.filter((_, i) => i !== index);
-      setCards(filtrados);
+      if (tipo === "excluir") {
+        await deleteCard(card.id);
+        setToast("Card excluído 🗑️");
+      }
+
+      await carregarCards();
+    } catch (error) {
+      console.error(error);
     }
 
     setAcaoModal(null);
   }
-  // ✅ CONCLUIR
-  function concluirCard(index) {
-    const novos = [...cards];
-    novos[index].status = "concluido";
-    setCards(novos);
+
+  async function adicionarCard() {
+    if (
+      !novoCard.nome.trim() ||
+      !novoCard.tema.trim() ||
+      !novoCard.texto.trim() ||
+      !novoCard.data.trim()
+    ) {
+      setErro("Preencha todos os campos!");
+      return;
+    }
+
+    // formato esperado: DD/MM
+    const regex = /^(\d{2})\/(\d{2})$/;
+
+    const match = novoCard.data.match(regex);
+
+    if (!match) {
+      setErro("Formato inválido! Use: 15/05");
+      return;
+    }
+
+    const dia = parseInt(match[1], 10);
+    const mes = parseInt(match[2], 10);
+
+    // valida mês
+    if (mes < 1 || mes > 12) {
+      setErro("Mês inválido!");
+      return;
+    }
+
+    // valida dia
+    const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    if (dia < 1 || dia > diasPorMes[mes - 1]) {
+      setErro("Dia inválido!");
+      return;
+    }
+
+    const anoAtual = new Date().getFullYear();
+
+    // converte para LocalDate
+    const endDate = `${anoAtual}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+
+    setErro("");
+
+    try {
+      // EDITAR
+      if (editandoIndex !== null) {
+        const cardEditando = cards[editandoIndex];
+
+        await updateCard(cardEditando.id, {
+          name: novoCard.nome,
+          theme: novoCard.tema,
+          text: novoCard.texto,
+          endDate: endDate,
+          status: cardEditando.status,
+        });
+
+        setToast("Card atualizado com sucesso ✅");
+      }
+
+      // CRIAR
+      else {
+        await createCard({
+          name: novoCard.nome,
+          theme: novoCard.tema,
+          text: novoCard.texto,
+          endDate: endDate,
+          status: "PENDENTE",
+        });
+
+        setToast("Card criado com sucesso 🚀");
+      }
+
+      await carregarCards();
+
+      setEditandoIndex(null);
+
+      setNovoCard({
+        nome: "",
+        tema: "",
+        texto: "",
+        data: "",
+      });
+
+      setMostrarModal(false);
+    } catch (error) {
+      console.error(error);
+
+      console.log(error.response);
+
+      setErro("Erro ao salvar card.");
+    }
   }
 
-  // ❌ CANCELAR
-  function cancelarCard(index) {
-    const novos = [...cards];
-    novos[index].status = "cancelado";
-    setCards(novos);
-  }
-
-  // 🔄 REATIVAR
-  function reativarCard(index) {
-    const novos = [...cards];
-    novos[index].status = "pendente";
-    setCards(novos);
-  }
-
-  // 🗑 EXCLUIR
-  function excluirCard(index) {
-    const novos = cards.filter((_, i) => i !== index);
-    setCards(novos);
-  }
-
-  // ➕ ADICIONAR CARD
-  // ➕ ADICIONAR CARD
-function adicionarCard() {
-  if (
-    !novoCard.nome.trim() ||
-    !novoCard.tema.trim() ||
-    !novoCard.texto.trim() ||
-    !novoCard.data.trim()
-  ) {
-    setErro("Preencha todos os campos!");
-    return;
-  }
-
-  // Valida formato: DD/MM - DD/MM
-  const regex = /^(\d{2})\/(\d{2})\s-\s(\d{2})\/(\d{2})$/;
-  const match = novoCard.data.match(regex);
-
-  if (!match) {
-    setErro("Formato de data inválido! Use: 10/03 - 15/03");
-    return;
-  }
-
-  // Captura as datas
-  const diaInicio = parseInt(match[1], 10);
-  const mesInicio = parseInt(match[2], 10);
-  const diaFim = parseInt(match[3], 10);
-  const mesFim = parseInt(match[4], 10);
-
-  // Função para validar se a data existe
-  function dataValida(dia, mes) {
-    if (mes < 1 || mes > 12) return false;
-
-    const diasPorMes = [
-      31, // Jan
-      28, // Fev
-      31, // Mar
-      30, // Abr
-      31, // Mai
-      30, // Jun
-      31, // Jul
-      31, // Ago
-      30, // Set
-      31, // Out
-      30, // Nov
-      31, // Dez
-    ];
-
-    return dia >= 1 && dia <= diasPorMes[mes - 1];
-  }
-
-  // Valida data inicial
-  if (!dataValida(diaInicio, mesInicio)) {
-    setErro("Data inicial inválida!");
-    return;
-  }
-
-  // Valida data final
-  if (!dataValida(diaFim, mesFim)) {
-    setErro("Data final inválida!");
-    return;
-  }
-
-  // Cria objetos Date para comparar
-  const anoAtual = new Date().getFullYear();
-
-  const dataInicio = new Date(anoAtual, mesInicio - 1, diaInicio);
-  const dataFim = new Date(anoAtual, mesFim - 1, diaFim);
-
-  // Verifica se a data final é menor que a inicial
-  if (dataFim < dataInicio) {
-    setErro("A data final não pode ser menor que a data inicial!");
-    return;
-  }
-
-  setErro("");
-
-  // 🔥 SE ESTIVER EDITANDO
-  if (editandoIndex !== null) {
-    const novos = [...cards];
-
-    // Mantém o status do card
-    novos[editandoIndex] = {
-      ...novoCard,
-      status: cards[editandoIndex].status,
-    };
-
-    setCards(novos);
-    setEditandoIndex(null);
-    setToast("Card atualizado com sucesso ✅");
-  } else {
-    setCards([
-      ...cards,
-      {
-        ...novoCard,
-        status: "pendente",
-      },
-    ]);
-    setToast("Card criado com sucesso 🚀");
-  }
-
-  // Limpa formulário
-  setNovoCard({
-    nome: "",
-    tema: "",
-    texto: "",
-    data: "",
-  });
-
-  setMostrarModal(false);
-}
   return (
     <div className="container">
       {toast && <div className="toast">{toast}</div>}
+
       {/* HEADER */}
       <header className="header">
         <div className="header-content">
           <h2>Study card</h2>
+
           {mostrarLogoutModal && (
-  <div className="modal-overlay">
-    <div className="modal logout-modal">
+            <div className="modal-overlay">
+              <div className="modal logout-modal">
+                <h2>Deseja sair?</h2>
 
-      <h2>Deseja sair?</h2>
+                <div className="logout-buttons">
+                  <button
+                    className="cancelar"
+                    onClick={() => setMostrarLogoutModal(false)}
+                  >
+                    Cancelar
+                  </button>
 
-      <div className="logout-buttons">
-        <button
-          className="cancelar"
-          onClick={() => setMostrarLogoutModal(false)}
-        >
-          Cancelar
-        </button>
+                  <button
+                    className="sair"
+                    onClick={() => {
+                      localStorage.removeItem("usuarioLogado");
+                      localStorage.removeItem("token");
 
-        <button
-          className="sair"
-          // Substitua apenas o onClick do botão "Sair" por este código
-onClick={() => {
-  // Remove o usuário logado do localStorage
-  localStorage.removeItem("usuarioLogado");
+                      setMostrarLogoutModal(false);
 
-  // Fecha o modal
-  setMostrarLogoutModal(false);
+                      localStorage.setItem(
+                        "mensagem",
+                        "Você saiu com sucesso 👋",
+                      );
 
-  // Salva mensagem para aparecer na tela de login
-  localStorage.setItem("mensagem", "Você saiu com sucesso 👋");
-
-  // Redireciona para o login
-  window.location.href = "/login";
-}}
-        >
-          Sair
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
+                      window.location.href = "/login";
+                    }}
+                  >
+                    Sair
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <button
             className="logout"
@@ -277,6 +257,8 @@ onClick={() => {
           </button>
         </div>
       </header>
+
+      {/* MODAL AÇÕES */}
       {acaoModal && (
         <div className="modal-overlay">
           <div className="modal logout-modal">
@@ -289,36 +271,23 @@ onClick={() => {
 
             <div className="logout-buttons">
               <button className="cancelar" onClick={() => setAcaoModal(null)}>
-              voltar
+                voltar
               </button>
 
-             <button
-  className="sair"
-  onClick={() => {
-    confirmarAcao();
-
-    if (acaoModal.tipo === "excluir") {
-      setToast("Card excluído 🗑️");
-    }
-    if (acaoModal.tipo === "concluir") {
-      setToast("Card concluído ✅");
-    }
-    if (acaoModal.tipo === "cancelar") {
-      setToast("Card cancelado ❌");
-    }
-    if (acaoModal.tipo === "reativar") {
-      setToast("Card reativado 🔄");
-    }
-  }}
->
-  Confirmar
-</button>
+              <button
+                className="sair"
+                onClick={async () => {
+                  await confirmarAcao();
+                }}
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL */}
+      {/* MODAL CARD */}
       {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -327,46 +296,64 @@ onClick={() => {
             </button>
 
             <h2>{editandoIndex !== null ? "Editar Card" : "Novo Card"}</h2>
+
             <label>Nome</label>
+
             <input
               type="text"
               placeholder="Ex: Nome do card..."
               value={novoCard.nome}
               onChange={(e) => {
-                setNovoCard({ ...novoCard, nome: e.target.value });
+                setNovoCard({
+                  ...novoCard,
+                  nome: e.target.value,
+                });
                 setErro("");
               }}
             />
 
             <label>Tema</label>
+
             <input
               type="text"
               placeholder="Ex: Matemática aplicada, Back-end..."
               value={novoCard.tema}
               onChange={(e) => {
-                setNovoCard({ ...novoCard, tema: e.target.value });
+                setNovoCard({
+                  ...novoCard,
+                  tema: e.target.value,
+                });
                 setErro("");
               }}
             />
 
             <label>Texto</label>
+
             <input
               type="text"
               placeholder="Ex: Revisar React, estudar para prova..."
               value={novoCard.texto}
               onChange={(e) => {
-                setNovoCard({ ...novoCard, texto: e.target.value });
+                setNovoCard({
+                  ...novoCard,
+                  texto: e.target.value,
+                });
                 setErro("");
               }}
             />
 
             <label>Data</label>
+
             <input
               type="text"
-              placeholder="10/03 - 15/03"
+              placeholder="ex: 15/05"
               value={novoCard.data}
               onChange={(e) => {
-                setNovoCard({ ...novoCard, data: e.target.value });
+                setNovoCard({
+                  ...novoCard,
+                  data: e.target.value,
+                });
+
                 setErro("");
               }}
             />
@@ -395,7 +382,8 @@ onClick={() => {
           onClick={() => {
             setMostrarModal(true);
             setErro("");
-            setEditandoIndex(null); // 🔥 limpa edição
+            setEditandoIndex(null);
+
             setNovoCard({
               nome: "",
               tema: "",
@@ -414,35 +402,35 @@ onClick={() => {
       {/* CARDS */}
       <div className="cards">
         {cards.map((card, index) => (
-          <div className={`card ${card.status}`} key={index}>
+          <div className={`card ${card.status?.toLowerCase()}`} key={card.id}>
             <div className="card-top">
-              <strong>{card.nome}</strong>
-              <span>{card.tema}</span>
+              <strong>{card.name}</strong>
+              <span>{card.theme}</span>
             </div>
 
-            <p>{card.texto}</p>
+            <p>{card.text}</p>
 
             <div className="card-info">
               <div className="info-left">
                 <span className="info-item">
                   <FiClock size={16} />
-                  {card.data}
+                  {card.endDate}
                 </span>
 
                 <span className="info-item">
-                  {card.status === "pendente" && (
+                  {card.status?.toLowerCase() === "pendente" && (
                     <>
                       <FiAlertCircle size={16} /> Pendente
                     </>
                   )}
 
-                  {card.status === "concluido" && (
+                  {card.status?.toLowerCase() === "concluido" && (
                     <>
                       <FiCheckCircle size={16} /> Concluído
                     </>
                   )}
 
-                  {card.status === "cancelado" && (
+                  {card.status?.toLowerCase() === "cancelado" && (
                     <>
                       <FiXCircle size={16} /> Cancelado
                     </>
@@ -454,7 +442,14 @@ onClick={() => {
                 className="edit-btn"
                 onClick={() => {
                   setMostrarModal(true);
-                  setNovoCard({ ...card });
+
+                  setNovoCard({
+                    nome: card.name,
+                    tema: card.theme,
+                    texto: card.text,
+                    data: card.endDate,
+                  });
+
                   setEditandoIndex(index);
                   setErro("");
                 }}
@@ -464,44 +459,70 @@ onClick={() => {
             </div>
 
             <div className="card-buttons">
-              {card.status === "pendente" && (
+              {card.status?.toLowerCase() === "pendente" && (
                 <>
                   <button
                     className="concluir"
-                    onClick={() => setAcaoModal({ tipo: "concluir", index })}
+                    onClick={() =>
+                      setAcaoModal({
+                        tipo: "concluir",
+                        index,
+                      })
+                    }
                   >
                     Concluir
                   </button>
 
                   <button
                     className="cancelar"
-                    onClick={() => setAcaoModal({ tipo: "cancelar", index })}
+                    onClick={() =>
+                      setAcaoModal({
+                        tipo: "cancelar",
+                        index,
+                      })
+                    }
                   >
                     Cancelar
                   </button>
                 </>
               )}
 
-              {card.status === "concluido" && (
+              {card.status?.toLowerCase() === "concluido" && (
                 <button
                   className="excluir"
-                  onClick={() => setAcaoModal({ tipo: "excluir", index })}
+                  onClick={() =>
+                    setAcaoModal({
+                      tipo: "excluir",
+                      index,
+                    })
+                  }
                 >
                   Excluir
                 </button>
               )}
-              {card.status === "cancelado" && (
+
+              {card.status?.toLowerCase() === "cancelado" && (
                 <>
                   <button
                     className="reativar"
-                    onClick={() => setAcaoModal({ tipo: "reativar", index })}
+                    onClick={() =>
+                      setAcaoModal({
+                        tipo: "reativar",
+                        index,
+                      })
+                    }
                   >
                     Reativar
                   </button>
 
                   <button
                     className="excluir"
-                    onClick={() => setAcaoModal({ tipo: "excluir", index })}
+                    onClick={() =>
+                      setAcaoModal({
+                        tipo: "excluir",
+                        index,
+                      })
+                    }
                   >
                     Excluir
                   </button>

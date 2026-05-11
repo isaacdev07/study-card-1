@@ -1,73 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import '../styles/Login.css';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import "../styles/Login.css";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../services/authService";
 
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState('');
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
 
-  // Exibe mensagem vinda do Cadastro
+  // mensagem cadastro/login
   useEffect(() => {
-    const mensagem = localStorage.getItem('mensagem');
+    const mensagem = localStorage.getItem("mensagem");
 
     if (mensagem) {
-      setErro(mensagem); // Mostra a mensagem na tela
-      localStorage.removeItem('mensagem');
+      setErro(mensagem);
+      localStorage.removeItem("mensagem");
     }
   }, []);
 
-  const entrar = (e) => {
+  const entrar = async (e) => {
     e.preventDefault();
-    setErro('');
 
-    // Validação dos campos
+    setErro("");
+
+    // validação
     if (!email.trim() || !senha.trim()) {
-      setErro('Preencha todos os campos.');
+      setErro("Preencha todos os campos.");
       return;
     }
 
-    // Validação de email
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!regexEmail.test(email)) {
-      setErro('Digite um email válido.');
+      setErro("Digite um email válido.");
       return;
     }
 
-    // Validação da senha
     if (senha.length < 6) {
-      setErro('A senha deve ter pelo menos 6 caracteres.');
+      setErro("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
-    // Busca usuários cadastrados
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+    try {
+      const response = await login(email, senha);
 
-    // Procura usuário com email e senha
-    const usuarioEncontrado = usuarios.find(
-      (usuario) =>
-        usuario.email === email &&
-        usuario.senha === senha
-    );
+      console.log(response);
 
-    if (!usuarioEncontrado) {
-      setErro('Email ou senha inválidos.');
-      return;
+      // salva usuário
+      localStorage.setItem(
+        "usuarioLogado",
+        JSON.stringify(response)
+      );
+
+      // salva token
+      localStorage.setItem(
+        "token",
+        response.token
+      );
+
+      // mensagem
+      localStorage.setItem(
+        "mensagem",
+        "Login realizado com sucesso! 🚀"
+      );
+
+      navigate("/home");
+
+    } catch (error) {
+      console.error(error);
+
+      if (error.response?.data?.message) {
+        setErro(error.response.data.message);
+      } else {
+        setErro("Email ou senha inválidos.");
+      }
     }
-
-    // Salva usuário logado
-    localStorage.setItem(
-      'usuarioLogado',
-      JSON.stringify(usuarioEncontrado)
-    );
-
-    // Salva mensagem para a Home
-    localStorage.setItem('mensagem','Login realizado com sucesso!');
-
-    // Redireciona automaticamente
-    navigate('/home');
   };
 
   return (
@@ -77,26 +86,28 @@ function Login() {
 
         <div className="campo-input">
           <label>Email</label>
+
           <input
             type="email"
             placeholder="Seu email cadastrado"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setErro('');
+              setErro("");
             }}
           />
         </div>
 
         <div className="campo-input">
           <label>Senha</label>
+
           <input
             type="password"
             placeholder="Sua senha"
             value={senha}
             onChange={(e) => {
               setSenha(e.target.value);
-              setErro('');
+              setErro("");
             }}
           />
         </div>
@@ -108,7 +119,10 @@ function Login() {
         </button>
 
         <p className="link-login">
-          Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+          Não tem uma conta?{" "}
+          <Link to="/cadastro">
+            Cadastre-se
+          </Link>
         </p>
       </form>
     </div>

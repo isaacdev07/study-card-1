@@ -1,66 +1,59 @@
-import React, { useState } from 'react';
-import '../styles/Cadastro.css';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import "../styles/Cadastro.css";
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "../services/authService";
 
 function Cadastro() {
   const navigate = useNavigate();
 
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState('');
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
 
-  
-  const lidarComCadastro = (e) => {
+  const lidarComCadastro = async (e) => {
     e.preventDefault();
-    setErro('');
+    setErro("");
 
     // Validação dos campos
     if (!nome.trim() || !email.trim() || !senha.trim()) {
-      setErro('Preencha todos os campos.');
+      setErro("Preencha todos os campos.");
       return;
     }
 
     // Validação de email
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!regexEmail.test(email)) {
-      setErro('Digite um email válido.');
+      setErro("Digite um email válido.");
       return;
     }
 
     // Validação de senha
     if (senha.length < 6) {
-      setErro('A senha deve ter pelo menos 6 caracteres.');
+      setErro("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
-    // Busca usuários já cadastrados
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+    try {
+      await register({
+        name: nome,
+        email: email,
+        password: senha,
+      });
 
-    // Verifica se o email já existe
-    const usuarioExistente = usuarios.find(
-      (usuario) => usuario.email === email
-    );
+      localStorage.setItem("mensagem", "Cadastro realizado com sucesso!");
 
-    if (usuarioExistente) {
-      setErro('Este email já está cadastrado.');
-      return;
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+
+      if (error.response?.data?.message) {
+        setErro(error.response.data.message);
+      } else {
+        setErro("Erro ao cadastrar usuário.");
+      }
     }
-
-    // Cria novo usuário
-    const novoUsuario = {
-      nome,
-      email,
-      senha,
-    };
-
-    // Salva no localStorage
-    usuarios.push(novoUsuario);
-    localStorage.setItem('usuarios', JSON.stringify(usuarios));
-
-    localStorage.setItem('mensagem', 'Cadastro realizado com sucesso!');
-navigate('/login');
-
   };
 
   return (
@@ -76,7 +69,7 @@ navigate('/login');
             value={nome}
             onChange={(e) => {
               setNome(e.target.value);
-              setErro('');
+              setErro("");
             }}
           />
         </div>
@@ -89,7 +82,7 @@ navigate('/login');
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setErro('');
+              setErro("");
             }}
           />
         </div>
@@ -102,7 +95,7 @@ navigate('/login');
             value={senha}
             onChange={(e) => {
               setSenha(e.target.value);
-              setErro('');
+              setErro("");
             }}
           />
         </div>
