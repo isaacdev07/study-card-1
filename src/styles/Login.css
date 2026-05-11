@@ -12,28 +12,29 @@
   margin-bottom: 40px;
   letter-spacing: -3px;
   font-family: 'Righteous', sans-serif;
-    font-weight: 400; /* regular */
-
+  font-weight: 400; /* regular */
 }
+
 .campo-input label {
   font-family: "Roboto", sans-serif;
   font-weight: 500;
   font-size: 14px;
   color: white;
 }
+
 .campo-input input::placeholder {
-font-family: "Roboto", sans-serif;
-  font-weight: 500;  
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
   color: #A3A3A3;
   font-size: 13px;
 }
+
 .campo-input input {
-font-family: "Roboto", sans-serif;
-  font-weight: 500;  
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
   font-size: 14px;
   color: #000;
 }
-
 
 .botao-entrar {
   width: 100%;
@@ -54,6 +55,7 @@ font-family: "Roboto", sans-serif;
   background-color: white;
   color: #002080;
 }
+
 .link-login {
   margin-top: 15px;
   text-align: center;
@@ -71,4 +73,78 @@ font-family: "Roboto", sans-serif;
 
 .link-login a:hover {
   text-decoration: underline;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 768px) {
+  .card-login {
+    max-width: 100%;
+    padding: 20px 15px;
+  }
+
+  .card-login h1 {
+    font-size: 3.5rem;
+    margin-bottom: 30px;
+    letter-spacing: -2px;
+  }
+
+  .campo-input label {
+    font-size: 13px;
+  }
+
+  .campo-input input {
+    font-size: 13px;
+  }
+
+  .campo-input input::placeholder {
+    font-size: 12px;
+  }
+
+  .botao-entrar {
+    padding: 16px;
+    font-size: 1.4rem;
+    margin-top: 25px;
+  }
+
+  .link-login {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-login {
+    padding: 15px 10px;
+  }
+
+  .card-login h1 {
+    font-size: 2.8rem;
+    margin-bottom: 25px;
+    letter-spacing: -1px;
+  }
+
+  .campo-input label {
+    font-size: 12px;
+  }
+
+  .campo-input input {
+    font-size: 12px;
+  }
+
+  .campo-input input::placeholder {
+    font-size: 11px;
+  }
+
+  .botao-entrar {
+    padding: 14px;
+    font-size: 1.2rem;
+    margin-top: 20px;
+  }
+
+  .link-login {
+    font-size: 12px;
+    margin-top: 12px;
+  }
 }

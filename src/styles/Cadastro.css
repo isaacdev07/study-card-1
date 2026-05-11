@@ -21,14 +21,13 @@
   max-width: 450px; /* Isso impede que os campos fiquem esticados demais */
   text-align: center;
   padding: 20px;
-  
 }
 
 .card-cadastro h1 {
-  font-size: 4rem; 
+  font-size: 4rem;
   color: white;
   font-family: 'Righteous', sans-serif;
-    font-weight: 400; /* regular */
+  font-weight: 400; /* regular */
   margin-bottom: 40px;
   letter-spacing: -3px;
 }
@@ -40,7 +39,6 @@
   font-family: "Roboto", sans-serif;
   font-weight: 500;
 }
-
 
 .campo-input label {
   color: white;
@@ -72,13 +70,16 @@
   border-radius: 50px;
   font-size: 1.8rem;
   font-family: "Righteous", sans-serif;
-  font-weight: 400;  margin-top: 30px;
+  font-weight: 400;
+  margin-top: 30px;
   cursor: pointer;
 }
+
 .botao-cadastrar:hover {
   background-color: white;
   color: #002080;
 }
+
 .link-login {
   margin-top: 15px;
   text-align: center;
@@ -96,4 +97,90 @@
 
 .link-login a:hover {
   text-decoration: underline;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 768px) {
+  .container-principal {
+    padding: 20px;
+  }
+
+  .card-cadastro {
+    max-width: 100%;
+    padding: 20px 15px;
+  }
+
+  .card-cadastro h1 {
+    font-size: 3.5rem;
+    margin-bottom: 30px;
+    letter-spacing: -2px;
+  }
+
+  .campo-input {
+    margin-bottom: 12px;
+  }
+
+  .campo-input label {
+    font-size: 0.9rem;
+    margin-left: 10px;
+  }
+
+  .campo-input input {
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+
+  .botao-cadastrar {
+    padding: 16px;
+    font-size: 1.4rem;
+    margin-top: 25px;
+  }
+
+  .link-login {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container-principal {
+    padding: 15px;
+  }
+
+  .card-cadastro {
+    padding: 15px 10px;
+  }
+
+  .card-cadastro h1 {
+    font-size: 2.8rem;
+    margin-bottom: 25px;
+    letter-spacing: -1px;
+  }
+
+  .campo-input {
+    margin-bottom: 10px;
+  }
+
+  .campo-input label {
+    font-size: 0.8rem;
+    margin-left: 8px;
+  }
+
+  .campo-input input {
+    padding: 14px 18px;
+    font-size: 0.9rem;
+  }
+
+  .botao-cadastrar {
+    padding: 14px;
+    font-size: 1.2rem;
+    margin-top: 20px;
+  }
+
+  .link-login {
+    font-size: 12px;
+    margin-top: 12px;
+  }
 }
