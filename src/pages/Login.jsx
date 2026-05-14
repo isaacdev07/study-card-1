@@ -46,7 +46,7 @@ function Login() {
     try {
       const response = await login(email, senha);
 
-      console.log(response);
+     // console.log(response);
 
       // salva usuário
       localStorage.setItem(
