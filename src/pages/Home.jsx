@@ -22,11 +22,12 @@ import {
 } from "../services/cardService";
 
 function Home() {
-  
- const usuarioLogado =
-  JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado")) || {};
 
-const nome = usuarioLogado.name || "Usuário";
+  // Verifica se o nome existe, divide pelos espaços e pega apenas a primeira palavra
+  const nome = usuarioLogado.name
+    ? usuarioLogado.name.split(" ")[0]
+    : "Usuário";
 
   const [cards, setCards] = useState([]);
   const [editandoIndex, setEditandoIndex] = useState(null);
